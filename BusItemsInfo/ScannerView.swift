@@ -5,12 +5,15 @@
 //  Created by George Koukoudis on 13/3/25.
 //
 
+// ScannerView.swift
+// ScannerView.swift
+// ScannerView.swift
 import SwiftUI
 import VisionKit
 
 struct ScannerView: View {
-    
     @EnvironmentObject var vm: AppViewModel
+    @Environment(\.dismiss) var dismiss
     
     private let textContentTypes: [(title: String, textContentType: DataScannerViewController.TextContentType?)] = [
         ("All", .none),
@@ -20,6 +23,8 @@ struct ScannerView: View {
         ("Address", .fullStreetAddress)
     ]
     
+    @State private var recognizedItems: [RecognizedItem] = []
+    
     var body: some View {
         switch vm.dataScannerAccessStatus {
         case .scannerAvailable:
@@ -27,40 +32,48 @@ struct ScannerView: View {
         case .cameraNotAvailable:
             Text("Your device doesn't have a camera")
         case .scannerNotAvailable:
-            Text("Your device doesn't have support for scanning barcode with this app")
+            Text("Your device doesn't have support for scanning")
         case .cameraAccessNotGranted:
-            Text("Please provide access to the camera in settings")
+            Text("Please provide camera access in settings")
         case .notDetermined:
             Text("Requesting camera access")
         }
     }
     
     private var mainView: some View {
-        DataScannerView(
-            recognizedItems: $vm.recognizedItems,
-            recognizedDataType: vm.recognizedDataType,
-            recognizesMultipleItems: vm.recognizesMultipleItems)
-        .background { Color.gray.opacity(0.3) }
-        .ignoresSafeArea()
-        .id(vm.dataScannerViewId)
-        .sheet(isPresented: .constant(true)) {
-            bottomContainerView
-                .background(.ultraThinMaterial)
-                .presentationDetents([.medium, .fraction(0.25)])
-                .presentationDragIndicator(.visible)
-                .interactiveDismissDisabled()
-                .onAppear {
-                    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                          let controller = windowScene.windows.first?.rootViewController?.presentedViewController else {
-                        return
+        ZStack {
+            DataScannerView(
+                recognizedItems: Binding(
+                    get: { recognizedItems },
+                    set: { newItems in
+                        recognizedItems = newItems
+                        if let item = newItems.first {
+                            vm.scannedResult = item.payloadStringValue ?? item.transcript
+                            dismiss()
+                        }
                     }
-                    controller.view.backgroundColor = .clear
-                }
+                ),
+                recognizedDataType: vm.recognizedDataType
+            )
+            .background { Color.gray.opacity(0.3) }
+            .ignoresSafeArea()
+            .id(vm.dataScannerViewId)
+            
+            VStack {
+                Spacer()
+                bottomContainerView
+                    .background(.ultraThinMaterial)
+                    .frame(height: UIScreen.main.bounds.height * 0.25)
+            }
         }
-        .onChange(of: vm.scanType) { oldValue, newValue in vm.recognizedItems = [] }
-        .onChange(of: vm.textContentType) {oldValue, newValue   in vm.recognizedItems = [] }
-        .onChange(of: vm.recognizesMultipleItems) { oldValue, newValue in vm.recognizedItems = []}
-        
+        .onChange(of: vm.scanType) { // Updated syntax
+                    vm.scannedResult = nil
+                    recognizedItems = []
+                }
+                .onChange(of: vm.textContentType) { // Updated syntax
+                    vm.scannedResult = nil
+                    recognizedItems = []
+                }
     }
     
     private var headerView: some View {
@@ -69,43 +82,48 @@ struct ScannerView: View {
                 Picker("Scan Type", selection: $vm.scanType) {
                     Text("Barcode").tag(ScanType.barcode)
                     Text("Text").tag(ScanType.text)
-                }.pickerStyle(.segmented)
-                
-                Toggle("Scan multiple", isOn: $vm.recognizesMultipleItems)
-            }.padding(.top)
+                }
+                .pickerStyle(.segmented)
+            }
+            .padding(.top)
             
             if vm.scanType == .text {
                 Picker("Text content type", selection: $vm.textContentType) {
                     ForEach(textContentTypes, id: \.self.textContentType) { option in
                         Text(option.title).tag(option.textContentType)
                     }
-                }.pickerStyle(.segmented)
+                }
+                .pickerStyle(.segmented)
             }
             
             Text(vm.headerText).padding(.top)
-        }.padding(.horizontal)
+        }
+        .padding(.horizontal)
     }
     
     private var bottomContainerView: some View {
         VStack {
             headerView
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    ForEach(vm.recognizedItems) { item in
-                        switch item {
-                        case .barcode(let barcode):
-                            Text(barcode.payloadStringValue ?? "Unknown barcode")
-                            
-                        case .text(let text):
-                            Text(text.transcript)
-                            
-                        @unknown default:
-                            Text("Unknown")
-                        }
-                    }
-                }
-                .padding()
+            if let result = vm.scannedResult {
+                Text(result)
+                    .padding()
             }
         }
+    }
+}
+
+extension RecognizedItem {
+    var payloadStringValue: String? {
+        if case .barcode(let barcode) = self {
+            return barcode.payloadStringValue
+        }
+        return nil
+    }
+    
+    var transcript: String {
+        if case .text(let text) = self {
+            return text.transcript
+        }
+        return ""
     }
 }

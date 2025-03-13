@@ -4,14 +4,15 @@
 //
 //  Created by George Koukoudis on 10/3/25.
 //
+
+// AppViewModel.swift
 import AVKit
 import Foundation
 import SwiftUI
 import VisionKit
 
-enum ScanType:String {
+enum ScanType: String {
     case barcode, text
-    
 }
 
 enum DataScannerAccessStatusType {
@@ -24,31 +25,28 @@ enum DataScannerAccessStatusType {
 
 @MainActor
 final class AppViewModel: ObservableObject {
-    
     @Published var dataScannerAccessStatus: DataScannerAccessStatusType = .notDetermined
-    @Published var recognizedItems: [RecognizedItem] = []
-    @Published var oldRecognizedItems: [RecognizedItem] = []
+    @Published var scannedResult: String? // New property to hold the scanned result
     @Published var scanType: ScanType = .barcode
     @Published var textContentType: DataScannerViewController.TextContentType?
-    @Published var recognizesMultipleItems = false
- 
-
+    
+    // Removed recognizesMultipleItems and related arrays since we only need one result
+    
     var recognizedDataType: DataScannerViewController.RecognizedDataType {
         scanType == .barcode ? .barcode() : .text(textContentType: textContentType)
     }
     
     var headerText: String {
-        if recognizedItems.isEmpty {
+        if scannedResult == nil {
             return "Scanning \(scanType.rawValue)"
         } else {
-            return "Recognized \(recognizedItems.count) item(s)"
+            return "Item recognized"
         }
     }
     
-      var dataScannerViewId: Int {
+    var dataScannerViewId: Int {
         var hasher = Hasher()
         hasher.combine(scanType)
-        hasher.combine(recognizesMultipleItems)
         if let textContentType {
             hasher.combine(textContentType)
         }
@@ -66,26 +64,18 @@ final class AppViewModel: ObservableObject {
         }
         
         switch AVCaptureDevice.authorizationStatus(for: .video) {
-            
         case .authorized:
             dataScannerAccessStatus = isScannerAvailable ? .scannerAvailable : .scannerNotAvailable
-            
         case .restricted, .denied:
             dataScannerAccessStatus = .cameraAccessNotGranted
-            
         case .notDetermined:
             let granted = await AVCaptureDevice.requestAccess(for: .video)
-            if granted {
-                dataScannerAccessStatus = isScannerAvailable ? .scannerAvailable : .scannerNotAvailable
-            } else {
-                dataScannerAccessStatus = .cameraAccessNotGranted
-            }
-        
+            dataScannerAccessStatus = granted && isScannerAvailable ? .scannerAvailable : .cameraAccessNotGranted
         default: break
-            
         }
     }
     
-    
+    func resetScanner() {
+        scannedResult = nil
+    }
 }
-

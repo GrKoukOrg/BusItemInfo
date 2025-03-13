@@ -8,16 +8,33 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var vm: AppViewModel
+    
     var body: some View {
-           NavigationView {
-               NavigationLink(destination: ScannerView()) {
-                   Text("Go to Scanner")
-                       .padding()
-                       .background(Color.blue)
-                       .foregroundColor(.white)
-                       .cornerRadius(8)
-               }
-               .navigationTitle("Home")
-           }
-       }
+        NavigationView {
+            VStack {
+                if let scannedBarcode = vm.scannedResult {
+                    Text("Scanned Result: \(scannedBarcode)")
+                        .padding()
+                    
+                    Button("Scan Again") {
+                        vm.resetScanner()
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                } else {
+                    NavigationLink(destination: ScannerView()) {
+                        Text("Go to Scanner")
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                }
+            }
+            .navigationTitle("Home")
+        }
+    }
 }
