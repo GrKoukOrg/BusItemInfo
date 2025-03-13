@@ -60,6 +60,7 @@ struct ScannerView: View {
         .onChange(of: vm.scanType) { oldValue, newValue in vm.recognizedItems = [] }
         .onChange(of: vm.textContentType) {oldValue, newValue   in vm.recognizedItems = [] }
         .onChange(of: vm.recognizesMultipleItems) { oldValue, newValue in vm.recognizedItems = []}
+        
     }
     
     private var headerView: some View {
