@@ -13,6 +13,12 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack {
+                Text("Current API URL: \(AppSettings.apiURL)")
+                NavigationLink("Edit Settings"){
+                    SettingsView()
+                }
+                    
+                Spacer()
                 if let scannedBarcode = vm.scannedResult {
                     Text("Scanned Result: \(scannedBarcode)")
                         .padding()
@@ -37,4 +43,10 @@ struct ContentView: View {
             .navigationTitle("Home")
         }
     }
+}
+
+#Preview {
+    ContentView()
+        .environmentObject(AppViewModel())
+        
 }
