@@ -16,8 +16,17 @@ struct ContentView: View {
                 Text("Current API URL: \(AppSettings.apiURL)")
                 NavigationLink("Edit Settings"){
                     SettingsView()
+                }.padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                NavigationLink(destination: ItemsView()) {
+                    Text("Item Details")
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
-                    
                 Spacer()
                 if let scannedBarcode = vm.scannedResult {
                     Text("Scanned Result: \(scannedBarcode)")
