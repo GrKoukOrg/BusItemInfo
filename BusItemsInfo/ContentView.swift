@@ -20,8 +20,8 @@ struct ContentView: View {
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(8)
-                NavigationLink(destination: ItemsView()) {
-                    Text("Item Details")
+                NavigationLink(destination: SyncView()) {
+                    Text("Sync Items")
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
