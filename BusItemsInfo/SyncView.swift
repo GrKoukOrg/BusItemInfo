@@ -40,8 +40,8 @@ struct SyncView: View {
                     }
                 }
             }
-
-            Button("Fetch Items") {
+            Spacer()
+            Button("Sync Items") {
                 viewModel.fetchItems()
             }
             .padding()
