@@ -10,42 +10,57 @@ import SwiftData
 
 struct ContentView: View {
     @EnvironmentObject var vm: AppViewModel
-    @Environment(\.modelContext) private var modelContext // Access the ModelContext
-    @Query var items: [item] // Fetches all items from SwiftData
-    @State private var searchText = "" // State for search input
-    // Computed property to filter items based on search text
+    @Environment(\.modelContext) private var modelContext
+    @Query var items: [item]
+    @State private var searchText = ""
+    
     var filteredItems: [item] {
         if searchText.isEmpty {
-            return [] // Hide list when search text is empty
+            return []
         } else {
             let filtered = items.filter { item in
                 item.name.localizedStandardContains(searchText) ||
                 item.code.localizedStandardContains(searchText) ||
                 (item.barcodes?.localizedStandardContains(searchText) ?? false)
             }
-            print("Search Text: '\(searchText)', Filtered Items Count: \(filtered.count)") // Debugging
+            print("Search Text: '\(searchText)', Filtered Items Count: \(filtered.count)")
             return filtered
         }
     }
+    
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottom) {
-                // Main content with scrolling capability
                 ScrollView {
                     VStack(spacing: 16) {
-                        // Current API URL
+                        HStack {
+                            NavigationLink(destination: SettingsView()) {
+                                Text("Edit Settings")
+                                    .padding()
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                            }
+                            NavigationLink(destination: SyncView()) {
+                                Text("Sync Items")
+                                    .padding()
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                            }
+                            
+                        }
+                        
                         Text("Current API URL: \(AppSettings.apiURL)")
                             .padding(.top)
                         
-                        // Search box
                         TextField("Search items", text: $searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding(.horizontal)
                             .onChange(of: searchText) {
-                                print("Items in database: \(items.count)") // Debugging total items
+                                print("Items in database: \(items.count)")
                             }
                         
-                        // Scanner button
                         NavigationLink(destination: ScannerView()) {
                             Text("Scan Code")
                                 .padding()
@@ -54,9 +69,12 @@ struct ContentView: View {
                                 .cornerRadius(8)
                         }
                         
-                        // Filtered items list (shown only when search text exists)
-                        VStack {
-                            if !searchText.isEmpty {
+                        // Fixed conditional logic for displaying filtered items
+                        if !searchText.isEmpty {
+                            if filteredItems.isEmpty {
+                                Text("No items found for '\(searchText)'")
+                                    .foregroundColor(.gray)
+                            } else {
                                 List(filteredItems) { item in
                                     VStack(alignment: .leading) {
                                         Text(item.name)
@@ -70,39 +88,17 @@ struct ContentView: View {
                                     }
                                 }
                                 .frame(maxHeight: 300)
-                            } else if !searchText.isEmpty {
-                                Text("No items found for '\(searchText)'")
-                                    .foregroundColor(.gray)
                             }
                         }
                     }
                     .padding()
-                    .padding(.bottom, 10) // Extra space to avoid overlap with bottom buttons
+                    .padding(.bottom, 100) // Adjusted for bottom buttons
                 }
                 
-                // Bottom buttons (always visible)
-                HStack {
-                    NavigationLink(destination: SettingsView()) {
-                        Text("Edit Settings")
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                    
-                    NavigationLink(destination: SyncView()) {
-                        Text("Sync Items")
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                }
-                .padding()
+               
             }
             .navigationTitle("Home")
         }
-        // Update search text when a barcode is scanned
         .onChange(of: vm.scannedResult) {
             if let scanned = vm.scannedResult {
                 searchText = scanned
@@ -110,7 +106,6 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            // Debug initial state
             print("ContentView appeared. Total items: \(items.count)")
         }
     }
@@ -120,5 +115,4 @@ struct ContentView: View {
     ContentView()
         .modelContainer(PersistenceController(inMemory: true).container)
         .environmentObject(AppViewModel())
-        
 }
