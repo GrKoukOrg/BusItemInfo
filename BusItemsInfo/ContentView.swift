@@ -14,95 +14,92 @@ struct ContentView: View {
     @Query var items: [item]
     @State private var searchText = ""
     
+    // Improved filtering logic
     var filteredItems: [item] {
-        if searchText.isEmpty {
-            return []
+        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        if trimmedSearchText.isEmpty {
+            return items // Show all items when no search is active
         } else {
-            let filtered = items.filter { item in
-                item.name.localizedStandardContains(searchText) ||
-                item.code.localizedStandardContains(searchText) ||
-                (item.barcodes?.localizedStandardContains(searchText) ?? false)
+            return items.filter { item in
+                item.name.localizedStandardContains(trimmedSearchText) ||
+                item.code.localizedStandardContains(trimmedSearchText) ||
+                (item.barcodes?.localizedStandardContains(trimmedSearchText) ?? false)
             }
-            print("Search Text: '\(searchText)', Filtered Items Count: \(filtered.count)")
-            return filtered
         }
     }
     
     var body: some View {
         NavigationView {
-            ZStack(alignment: .bottom) {
-                ScrollView {
-                    VStack(spacing: 16) {
-                        HStack {
-                            NavigationLink(destination: SettingsView()) {
-                                Text("Edit Settings")
-                                    .padding()
-                                    .background(Color.blue)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(8)
-                            }
-                            NavigationLink(destination: SyncView()) {
-                                Text("Sync Items")
-                                    .padding()
-                                    .background(Color.blue)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(8)
-                            }
-                            
-                        }
-                        
-                        Text("Current API URL: \(AppSettings.apiURL)")
-                            .padding(.top)
-                        
-                        TextField("Search items", text: $searchText)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding(.horizontal)
-                            .onChange(of: searchText) {
-                                print("Items in database: \(items.count)")
-                            }
-                        
-                        NavigationLink(destination: ScannerView()) {
-                            Text("Scan Code")
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                        }
-                        
-                        // Fixed conditional logic for displaying filtered items
-                        if !searchText.isEmpty {
-                            if filteredItems.isEmpty {
-                                Text("No items found for '\(searchText)'")
-                                    .foregroundColor(.gray)
-                            } else {
-                                List(filteredItems) { item in
-                                    VStack(alignment: .leading) {
-                                        Text(item.name)
-                                            .font(.headline)
-                                        Text("Code: \(item.code)")
-                                            .font(.subheadline)
-                                        if let barcodes = item.barcodes {
-                                            Text("Barcodes: \(barcodes)")
-                                                .font(.subheadline)
-                                        }
-                                    }
-                                }
-                                .frame(maxHeight: 300)
-                            }
-                        }
-                    }
-                    .padding()
-                    .padding(.bottom, 100) // Adjusted for bottom buttons
-                }
+            VStack {
+                // Search Bar
+                TextField("Search items", text: $searchText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.horizontal)
                 
-               
+                // Display List Based on Search Results
+                if filteredItems.isEmpty {
+                    Text("No items found for '\(searchText)'")
+                        .foregroundColor(.gray)
+                        .padding()
+                } else {
+                    List(filteredItems) { item in
+                        NavigationLink(destination: ItemDetailView(item: item)) {
+                            VStack(alignment: .leading) {
+                                Text(item.name)
+                                    .font(.headline)
+                                Text("Code: \(item.code)")
+                                    .font(.subheadline)
+                                if let barcodes = item.barcodes {
+                                    Text("Barcodes: \(barcodes)")
+                                        .font(.subheadline)
+                                }
+                            }
+                        }
+                        .listStyle(PlainListStyle()) // Improved appearance
+                    }
+                }
+                Spacer()
+                // Buttons Section
+                HStack {
+                    NavigationLink(destination: SettingsView()) {
+                        Text("Edit Settings")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding(.horizontal)
+                    
+                    NavigationLink(destination: SyncView()) {
+                        Text("Sync Items")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding(.horizontal)
+                    
+                    NavigationLink(destination: ScannerView()) {
+                        Text("Scan Code")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding(.horizontal)
+                }
+                //.padding(.top)
             }
             .navigationTitle("Home")
         }
-        .onChange(of: vm.scannedResult) {
-            if let scanned = vm.scannedResult {
-                searchText = scanned
-                vm.scannedResult = nil
+        .onChange(of: vm.scannedResult) { oldValue, newValue in
+            if let scannedBarcode = newValue {
+                searchText = scannedBarcode // Set searchText to scanned barcode
+                vm.scannedResult = nil      // Reset scanned result
             }
         }
         .onAppear {

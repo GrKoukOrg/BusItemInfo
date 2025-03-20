@@ -14,6 +14,7 @@ struct BusItemsInfoApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(vm)
+                .modelContainer(PersistenceController.shared.container)
                 .task {
                     await vm.requestDataScannerAccessStatus()
                 }
