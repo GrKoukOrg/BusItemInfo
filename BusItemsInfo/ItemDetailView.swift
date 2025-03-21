@@ -49,7 +49,10 @@ struct ItemDetailView: View {
                     Text("Retail Price: \(viewModel.timiPolisisLianFormatted)")
                     Text("Retail Price (VAT): \(viewModel.timiPolisisLianFpaFormatted)")
                 }
-                
+                Group {
+                    Text("Markup (Retail Price): \(viewModel.markupLian)")
+                    Text("Markup (Retail Price + VAT): \(viewModel.markupLianFpa)")
+                }
                 Spacer()
             }
             .padding()

@@ -36,7 +36,20 @@ struct ContentView: View {
                 TextField("Search items", text: $searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
-                
+                    .overlay(
+                        HStack {
+                            Spacer()
+                            if !searchText.isEmpty {
+                                Button(action: {
+                                    searchText = ""
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.trailing, 8)
+                            }
+                        }
+                    )
                 // Display List Based on Search Results
                 if filteredItems.isEmpty {
                     Text("No items found for '\(searchText)'")
@@ -61,27 +74,7 @@ struct ContentView: View {
                 }
                 Spacer()
                 // Buttons Section
-                HStack {
-                    NavigationLink(destination: SettingsView()) {
-                        Text("Edit Settings")
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                    .padding(.horizontal)
-                    
-                    NavigationLink(destination: SyncView()) {
-                        Text("Sync Items")
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                    .padding(.horizontal)
-                    
+                HStack{
                     NavigationLink(destination: ScannerView()) {
                         Text("Scan Code")
                             .padding()
@@ -91,8 +84,39 @@ struct ContentView: View {
                             .cornerRadius(8)
                     }
                     .padding(.horizontal)
+
                 }
-                //.padding(.top)
+                HStack {
+                    NavigationLink(destination: SettingsView()) {
+                        Text("Settings")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                   // .padding(.horizontal)
+                    
+                    NavigationLink(destination: SyncView()) {
+                        Text("Sync")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    //.padding(.horizontal)
+                    NavigationLink(destination: AboutView()) {
+                        Text("About")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    //.padding(.horizontal)
+                                    }
+                .padding()
             }
             .navigationTitle("Home")
         }

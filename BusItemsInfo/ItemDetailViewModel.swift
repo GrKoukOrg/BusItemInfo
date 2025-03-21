@@ -34,6 +34,15 @@ class ItemDetailViewModel {
     var timiPolisisLianFormatted: String { formatCurrency(item.timiPolisisLian) }
     var timiPolisisLianFpaFormatted: String { formatCurrency(item.timiPolisisLianFpa) }
     
+    // Computed properties to calculate markup
+    var markupLian: String { calculateMarkup(purchasePrice: item.timiAgoras, sellingPrice: item.timiPolisisLian) }
+    var markupLianFpa: String { calculateMarkup(purchasePrice: item.timiAgorasFpa, sellingPrice: item.timiPolisisLianFpa) }
+    
+    private func calculateMarkup(purchasePrice: Decimal, sellingPrice: Decimal) -> String {
+        guard purchasePrice > 0.009 else { return "N/A" }
+        let markup = ((sellingPrice - purchasePrice) / purchasePrice) * 100
+        return String(format: "%.2f%%", NSDecimalNumber(decimal: markup).doubleValue)
+    }
     private func formatCurrency(_ value: Decimal) -> String {
         return currencyFormatter.string(from: value as NSDecimalNumber) ?? "\(value)"
     }
