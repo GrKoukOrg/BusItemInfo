@@ -28,7 +28,7 @@ class SyncViewModel {
     }
     func fetchItems()
     {
-        guard let url = URL(string: "\(AppSettings.apiURL)/api/erpapi/getitems") else {
+        guard let url = URL(string: "\(AppSettings.apiURL)/api/busapi/getitems") else {
             print("Invalid URL")
             return
         }
